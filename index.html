@@ -118,7 +118,19 @@
               }).then((unityInstance) => {
                 document.querySelector("#unity-loading-bar").style.display = "none";
                 document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
+                  // Unity's SetFullscreen() calls requestFullscreen() from behind an
+                  // extra ccall/JSEvents layer, which some browsers (recent Chrome)
+                  // don't count as a direct user gesture on the first click, silently
+                  // rejecting it. Requesting fullscreen on the container directly, right
+                  // in this click handler, satisfies the gesture requirement immediately.
+                  var target = document.querySelector("#unity-container");
+                  if (target.requestFullscreen) {
+                    target.requestFullscreen();
+                  } else if (target.webkitRequestFullscreen) {
+                    target.webkitRequestFullscreen();
+                  } else {
+                    unityInstance.SetFullscreen(1);
+                  }
                 };
 
               }).catch((message) => {
